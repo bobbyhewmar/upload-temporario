@@ -88,8 +88,16 @@ export async function clearUploads() {
   const entries = await fsp.readdir(uploadsDir, { withFileTypes: true })
   await Promise.all(
     entries
-      .filter((e) => e.isFile())
       .filter((e) => e.name !== '.gitkeep')
-      .map((e) => fsp.unlink(safeJoin(uploadsDir, e.name)).catch(() => undefined)),
+      .map(async (e) => {
+        const full = safeJoin(uploadsDir, e.name)
+        if (e.isDirectory()) {
+          await fsp.rm(full, { recursive: true, force: true }).catch(() => undefined)
+          return
+        }
+        if (e.isFile()) {
+          await fsp.unlink(full).catch(() => undefined)
+        }
+      }),
   )
 }

@@ -33,10 +33,39 @@ Instale as dependências:
 npm install
 ```
 
-Dev server em `http://localhost:3000`:
+Dev server (porta definida em `nuxt.config.ts`):
 
 ```bash
 npm run dev
+```
+
+## Upload resumable (chunked)
+
+Fluxo:
+
+1) Criar sessão: `POST /api/uploads/init`
+2) Enviar chunks: `PUT /api/uploads/{uploadId}/chunks/{index}` (body binário)
+3) Consultar progresso: `GET /api/uploads/{uploadId}`
+4) Finalizar: `POST /api/uploads/{uploadId}/complete` → `{ "url": "/f/{id}/{filename}" }`
+
+Exemplo (PowerShell):
+
+```powershell
+$file = "meu-arquivo.iso"
+$size = (Get-Item $file).Length
+
+curl.exe -H "Content-Type: application/json" `
+  --data-binary "{""filename"":""meu-arquivo.iso"",""size"":$size,""chunkSize"":1048576}" `
+  http://localhost:3000/api/uploads/init
+```
+
+Depois, divida o arquivo em partes e envie:
+
+```bash
+curl.exe -X PUT --data-binary "@chunk0.part" http://localhost:3000/api/uploads/<uploadId>/chunks/0
+curl.exe -X PUT --data-binary "@chunk1.part" http://localhost:3000/api/uploads/<uploadId>/chunks/1
+curl.exe -X PUT --data-binary "@chunk2.part" http://localhost:3000/api/uploads/<uploadId>/chunks/2
+curl.exe -X POST http://localhost:3000/api/uploads/<uploadId>/complete
 ```
 
 ## Production
