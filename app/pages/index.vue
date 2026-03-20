@@ -17,7 +17,7 @@
 
       <div v-if="uploading" class="progressWrap">
         <progress class="progress" :value="progress" max="100" />
-        <div class="muted">{{ progress }}%</div>
+        <div class="muted">{{ progressText }}</div>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -54,8 +54,16 @@ type UploadResponse = {
 const pickedFile = ref<File | null>(null)
 const uploading = ref(false)
 const progress = ref(0)
+const uploadedBytes = ref(0)
+const totalBytes = ref(0)
 const result = ref<UploadResponse | null>(null)
 const error = ref<string | null>(null)
+
+const progressText = computed(() => {
+  if (!uploading.value) return ''
+  if (!totalBytes.value) return `${progress.value}%`
+  return `${formatBytes(uploadedBytes.value)} / ${formatBytes(totalBytes.value)} (${progress.value}%)`
+})
 
 const absoluteUrl = computed(() => {
   if (!result.value?.url) return ''
@@ -78,6 +86,8 @@ function onPick(e: Event) {
   result.value = null
   error.value = null
   progress.value = 0
+  uploadedBytes.value = 0
+  totalBytes.value = pickedFile.value?.size || 0
 }
 
 function formatBytes(bytes: number) {
@@ -88,7 +98,7 @@ function formatBytes(bytes: number) {
     n /= 1024
     i++
   }
-  const digits = i === 0 ? 0 : i === 1 ? 1 : 2
+  const digits = i === 0 ? 0 : 2
   return `${n.toFixed(digits)} ${units[i]}`
 }
 
@@ -97,6 +107,8 @@ async function upload() {
 
   uploading.value = true
   progress.value = 0
+  uploadedBytes.value = 0
+  totalBytes.value = pickedFile.value.size
   result.value = null
   error.value = null
 
@@ -111,6 +123,8 @@ async function upload() {
 
       xhr.upload.onprogress = (ev) => {
         if (!ev.lengthComputable) return
+        uploadedBytes.value = ev.loaded
+        totalBytes.value = ev.total
         progress.value = Math.min(100, Math.round((ev.loaded / ev.total) * 100))
       }
 
