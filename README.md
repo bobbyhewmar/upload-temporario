@@ -48,6 +48,13 @@ Fluxo:
 3) Consultar progresso: `GET /api/uploads/{uploadId}`
 4) Finalizar: `POST /api/uploads/{uploadId}/complete` → `{ "url": "/f/{id}/{filename}" }`
 
+Campos do progresso (`GET /api/uploads/{uploadId}`):
+
+- `bytesReceived`: bytes já confirmados (somatório dos chunks recebidos)
+- `totalSize`: tamanho total esperado
+- `percent`: percentual (0–100)
+- `receivedChunks` / `missingChunks`: listas para retomada
+
 Exemplo (PowerShell):
 
 ```powershell

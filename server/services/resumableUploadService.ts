@@ -42,6 +42,14 @@ function uniqueSorted(nums: number[]) {
   return Array.from(new Set(nums)).sort((a, b) => a - b)
 }
 
+function bytesReceived(session: UploadSession, receivedChunks: number[]) {
+  let sum = 0
+  for (const i of receivedChunks) {
+    sum += expectedChunkSize(session, i)
+  }
+  return sum
+}
+
 export async function createUploadSession(body: any) {
   const filename = sanitizeFilename(body?.filename || 'file')
   const mimeType = typeof body?.mimeType === 'string' ? body.mimeType : null
@@ -91,6 +99,8 @@ export async function getUploadSession(uploadId: string) {
   }
   const totalChunks = Math.ceil(session.totalSize / session.chunkSize)
   const received = uniqueSorted(session.received)
+  const sentBytes = bytesReceived(session, received)
+  const percent = session.totalSize ? Math.floor((sentBytes / session.totalSize) * 100) : 0
   const missing: number[] = []
   for (let i = 0; i < totalChunks; i++) {
     if (!received.includes(i)) missing.push(i)
@@ -100,6 +110,8 @@ export async function getUploadSession(uploadId: string) {
     filename: session.filename,
     mimeType: session.mimeType,
     totalSize: session.totalSize,
+    bytesReceived: sentBytes,
+    percent,
     chunkSize: session.chunkSize,
     totalChunks,
     receivedChunks: received,
