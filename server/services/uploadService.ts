@@ -4,6 +4,7 @@ import { pipeline } from 'node:stream/promises'
 import { MAX_UPLOAD_BYTES } from '../utils/constants'
 import { generateId } from '../utils/id'
 import { sanitizeFilename } from '../utils/sanitize'
+import { filenameToUrlSegment } from '../utils/filenameForUrl'
 import { createUploadWriteStream, deleteUpload, ensureUploadsDir, type UploadMeta, writeUploadMeta } from '../utils/uploadStorage'
 
 export async function handleUpload(event: any) {
@@ -118,5 +119,6 @@ export async function handleUpload(event: any) {
     req.pipe(bb)
   })
 
-  return { url: `/f/${id}` }
+  const filenameSegment = filenameToUrlSegment(filename, id)
+  return { url: `/f/${id}/${filenameSegment}` }
 }

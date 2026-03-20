@@ -1,5 +1,5 @@
 import { getRouterParam, sendRedirect } from 'h3'
-import { handleDownload } from '../../services/downloadService'
+import { applyDownloadHeaders, prepareDownload } from '../../services/downloadService'
 import { readUploadMeta } from '../../utils/uploadStorage'
 import { filenameToUrlSegment } from '../../utils/filenameForUrl'
 
@@ -10,5 +10,8 @@ export default defineEventHandler(async (event) => {
     const filename = filenameToUrlSegment(meta.filename, id)
     return sendRedirect(event, `/f/${id}/${filename}`, 302)
   }
-  return await handleDownload(event, id)
+  const prepared = await prepareDownload(id)
+  applyDownloadHeaders(event, prepared)
+  return ''
 })
+

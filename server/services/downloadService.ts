@@ -7,7 +7,7 @@ function contentDisposition(filename: string) {
   return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`
 }
 
-export async function handleDownload(event: any, id: string) {
+export async function prepareDownload(id: string) {
   if (!isValidId(id)) {
     throw createError({ statusCode: 404, statusMessage: 'Arquivo não encontrado' })
   }
@@ -22,10 +22,18 @@ export async function handleDownload(event: any, id: string) {
   const filename = meta?.filename || id
   const mimeType = meta?.mimeType || 'application/octet-stream'
 
-  setHeader(event, 'Content-Type', mimeType)
-  setHeader(event, 'Content-Length', stat.size)
-  setHeader(event, 'Content-Disposition', contentDisposition(filename))
-  setHeader(event, 'Cache-Control', 'public, max-age=0')
+  return { stat, filename, mimeType }
+}
 
+export function applyDownloadHeaders(event: any, prepared: { stat: { size: number }; filename: string; mimeType: string }) {
+  setHeader(event, 'Content-Type', prepared.mimeType)
+  setHeader(event, 'Content-Length', prepared.stat.size)
+  setHeader(event, 'Content-Disposition', contentDisposition(prepared.filename))
+  setHeader(event, 'Cache-Control', 'public, max-age=0')
+}
+
+export async function handleDownload(event: any, id: string) {
+  const prepared = await prepareDownload(id)
+  applyDownloadHeaders(event, prepared)
   return sendStream(event, createUploadStream(id))
 }

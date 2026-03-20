@@ -9,7 +9,8 @@
 ## Rotas
 
 - `POST /api/upload` (multipart/form-data, campo `file`)
-- `GET /f/{id}` (download direto, sem autenticação)
+- `GET /f/{id}/{filename}` (download direto, sem autenticação)
+- `GET /f/{id}` (fallback; redireciona para a URL com `{filename}` quando possível)
 
 ## Metadados
 
@@ -50,6 +51,14 @@ Preview local:
 
 ```bash
 npm run preview
+```
+
+## Exemplo (Proxmox/curl/wget)
+
+O upload retorna `{ "url": "/f/{id}/{filename}" }`, por exemplo:
+
+```bash
+curl -F "file=@meu-arquivo.iso" http://localhost:3000/api/upload
 ```
 
 ## Observações
